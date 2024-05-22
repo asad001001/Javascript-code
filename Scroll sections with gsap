@@ -1,0 +1,38 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/ScrollTrigger.min.js"></script>
+
+
+<script>
+
+'use strict'
+function loadScrollObserver() {
+    if (!!window.IntersectionObserver && !!NodeList.prototype.forEach) {
+        var animationObserver = new IntersectionObserver(function (entries, observer) { entries.forEach(function (entry) { if (entry.isIntersecting) { entry.target.classList.add('scroll-animate-active') } }) }, { rootMargin: '-200px 0px -100px 0px', })
+        document.querySelectorAll('.scroll-animate').forEach(function (element) { animationObserver.observe(element) })
+    } else { $('.scroll-animate').addClass('scroll-animate-active') }
+}
+loadScrollObserver()
+gsap.registerPlugin(ScrollTrigger); let mm = gsap.matchMedia(); mm.add("(min-width: 769px)", () => {
+    let allowScroll = true; let scrollTimeout = gsap.delayedCall(1, () => allowScroll = true).pause(); let currentIndex = 0; let swipePanels = gsap.utils.toArray(".swipe-panel .panel"); gsap.set(swipePanels, { zIndex: i => swipePanels.length - i })
+    let intentObserver = ScrollTrigger.observe({ type: "wheel,touch", onUp: () => allowScroll && gotoPanel(currentIndex - 1, false), onDown: () => allowScroll && gotoPanel(currentIndex + 1, true), tolerance: 10, preventDefault: true, onEnable(self) { allowScroll = false; scrollTimeout.restart(true); let savedScroll = self.scrollY(); self._restoreScroll = () => self.scrollY(savedScroll); document.addEventListener("scroll", self._restoreScroll, { passive: false }); }, onDisable: self => document.removeEventListener("scroll", self._restoreScroll) }); intentObserver.disable(); function gotoPanel(index, isScrollingDown) {
+        if ((index === swipePanels.length && isScrollingDown) || (index === -1 && !isScrollingDown)) { intentObserver.disable(); return; }
+        allowScroll = false; scrollTimeout.restart(true); let target = isScrollingDown ? swipePanels[currentIndex] : swipePanels[index]; gsap.to(target, { xPercent: isScrollingDown ? -100 : 0, duration: 1.2 }); currentIndex = index;
+    }
+    ScrollTrigger.create({
+        trigger: ".swipe-panel", pin: true, start: "top top", end: "+=200", onEnter: (self) => {
+            if (intentObserver.isEnabled) { return }
+            self.scroll(self.start + 1); intentObserver.enable();
+        }, onEnterBack: (self) => {
+            if (intentObserver.isEnabled) { return }
+            self.scroll(self.end - 1); intentObserver.enable();
+        }
+    });
+}); 
+
+</script>
+
+<style>
+    .swipe-panel .panel {
+    position: absolute;
+}
+</style>
